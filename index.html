@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Shark Tank India — Season 1 Intelligence Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #12141a;
+  color: #c8d0dc;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  min-height: 100vh;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+background: #181c26;
+border-bottom: 1px solid #232837;
+padding: 13px 24px;
+display: flex; align-items: center; justify-content: space-between;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.shark-icon {
+width: 34px; height: 34px; border-radius: 6px;
+background: linear-gradient(135deg, #f07b20, #e04c1a);
+display: flex; align-items: center; justify-content: center;
+font-size: 18px;
+}
+.title-block h1 {
+font-family: ‘Barlow Condensed’, sans-serif;
+font-size: 19px; font-weight: 700; color: #fff;
+letter-spacing: 1px; text-transform: uppercase;
+}
+.title-block p {
+font-size: 9px; color: #4e5a70;
+letter-spacing: 2px; text-transform: uppercase; margin-top: 1px;
+}
+.header-badge {
+background: #1e2330; border: 1px solid #2c3347;
+color: #f07b20; font-size: 9px; font-weight: 600;
+letter-spacing: 2px; text-transform: uppercase;
+padding: 6px 14px; border-radius: 4px;
+}
+
+/* ── KPI BAR ── */
+.kpi-bar {
+display: grid; grid-template-columns: repeat(5, 1fr);
+background: #181c26;
+border-bottom: 1px solid #232837;
+}
+.kpi { padding: 16px 22px; border-right: 1px solid #232837; }
+.kpi:last-child { border-right: none; }
+.kpi-num {
+font-family: ‘Barlow Condensed’, sans-serif;
+font-size: 32px; font-weight: 700; line-height: 1; margin-bottom: 4px;
+}
+.kpi-num.orange { color: #f07b20; }
+.kpi-num.amber  { color: #f5a623; }
+.kpi-num.white  { color: #ffffff; }
+.kpi-num.red    { color: #e85d5d; }
+.kpi-lbl { font-size: 9px; color: #4e5a70; letter-spacing: 1.5px; text-transform: uppercase; }
+
+/* ── ROWS ── */
+.row-full  { border-bottom: 1px solid #232837; }
+.row-2     { display: grid; grid-template-columns: 1.4fr 1fr;   border-bottom: 1px solid #232837; }
+.row-2b    { display: grid; grid-template-columns: 1fr 1fr;     border-bottom: 1px solid #232837; }
+.row-3     { display: grid; grid-template-columns: 1fr 1fr 1fr; border-bottom: 1px solid #232837; }
+
+/* ── PANEL ── */
+.panel {
+padding: 20px 24px;
+border-right: 1px solid #232837;
+background: #12141a;
+}
+.panel:last-child { border-right: none; }
+.panel-title {
+font-size: 9px; font-weight: 600; color: #4e5a70;
+letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px;
+}
+.panel-title span { color: #f07b20; margin-left: 6px; }
+
+/* ── INSIGHT BOX ── */
+.insight-box {
+background: #1a1e2a;
+border-left: 3px solid #f07b20;
+border-radius: 4px;
+padding: 10px 14px;
+margin-top: 14px;
+font-size: 11px; line-height: 1.65; color: #8a95a8;
+}
+.insight-box strong { color: #f5a623; }
+
+/* ── SHARK TABLE ── */
+.shark-table { width: 100%; border-collapse: collapse; }
+.shark-table th {
+font-size: 9px; font-weight: 600; color: #4e5a70;
+letter-spacing: 1.5px; text-transform: uppercase;
+padding: 0 10px 12px; text-align: left;
+}
+.shark-table td {
+padding: 9px 10px; border-top: 1px solid #1e2330; vertical-align: middle;
+}
+.rank-badge {
+width: 22px; height: 22px; border-radius: 50%;
+display: inline-flex; align-items: center; justify-content: center;
+font-size: 10px; font-weight: 700;
+}
+.rank-1 { background: #f07b20; color: #12141a; }
+.rank-2 { background: #f5a623; color: #12141a; }
+.rank-3 { background: #c97d1a; color: #12141a; }
+.rank-n { background: #1e2330; color: #4e5a70; }
+.shark-name-cell { font-weight: 600; color: #c8d0dc; font-size: 12px; }
+.deal-rate-val   { color: #f07b20; font-weight: 600; }
+
+/* ── DONUT ── */
+.donut-layout { display: flex; align-items: flex-start; gap: 20px; }
+.donut-wrap { position: relative; width: 130px; height: 130px; flex-shrink: 0; }
+.donut-center {
+position: absolute; top: 50%; left: 50%;
+transform: translate(-50%,-50%); text-align: center; pointer-events: none;
+}
+.donut-center-num {
+font-family: ‘Barlow Condensed’, sans-serif;
+font-size: 26px; font-weight: 700; color: #f07b20; line-height: 1;
+}
+.donut-center-lbl { font-size: 9px; color: #4e5a70; letter-spacing: 1px; }
+.donut-legend { flex: 1; padding-top: 4px; }
+.legend-row { display: flex; align-items: center; margin-bottom: 8px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; margin-right: 8px; }
+.legend-name { flex: 1; color: #8a95a8; font-size: 11px; }
+.legend-val {
+font-family: ‘Barlow Condensed’, sans-serif;
+font-size: 16px; font-weight: 600; color: #c8d0dc;
+}
+.co-invest { margin-top: 12px; }
+.co-invest p { font-size: 9px; color: #4e5a70; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.co-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.co-label { font-size: 11px; color: #8a95a8; width: 76px; }
+.co-bar-track { flex: 1; height: 4px; background: #232837; border-radius: 2px; }
+.co-bar-fill  { height: 4px; border-radius: 2px; background: #f07b20; }
+.co-num { font-size: 11px; color: #f5a623; width: 20px; text-align: right; }
+
+/* ── HBAR ── */
+.hbar-row { margin-bottom: 14px; }
+.hbar-label { font-size: 11px; color: #8a95a8; margin-bottom: 5px; }
+.hbar-track { height: 24px; background: #1e2330; border-radius: 4px; overflow: hidden; }
+.hbar-fill {
+height: 100%; border-radius: 4px;
+display: flex; align-items: center; padding-left: 10px;
+font-size: 10px; font-weight: 600; color: #12141a; white-space: nowrap;
+}
+.hbar-fill.orange { background: linear-gradient(90deg, #e04c1a, #f07b20); }
+.hbar-fill.green  { background: linear-gradient(90deg, #2aa85c, #4ecf82); }
+
+/* ── FOOTER ── */
+.footer {
+background: #181c26; border-top: 1px solid #232837;
+padding: 11px 24px;
+display: flex; justify-content: space-between; align-items: center;
+}
+.footer span { font-size: 9px; color: #2e3747; letter-spacing: 1.5px; text-transform: uppercase; }
+</style>
+
+</head>
+<body>
+
+<!-- TOPBAR -->
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="shark-icon">🦈</div>
+    <div class="title-block">
+      <h1>Shark Tank India — Season 1</h1>
+      <p>Investment Intelligence Dashboard &nbsp;|&nbsp; 117 Pitches &nbsp;|&nbsp; 35 Episodes</p>
+    </div>
+  </div>
+  <div class="header-badge">Analytics Report</div>
+</div>
+
+<!-- KPI BAR -->
+
+<div class="kpi-bar">
+  <div class="kpi"><div class="kpi-num white">117</div><div class="kpi-lbl">Total Pitches</div></div>
+  <div class="kpi"><div class="kpi-num orange">65</div><div class="kpi-lbl">Deals Closed</div></div>
+  <div class="kpi"><div class="kpi-num amber">55.6%</div><div class="kpi-lbl">Deal Rate</div></div>
+  <div class="kpi"><div class="kpi-num orange">₹3,742L</div><div class="kpi-lbl">Total Deployed</div></div>
+  <div class="kpi"><div class="kpi-num red">51.9%</div><div class="kpi-lbl">Avg Valuation Haircut</div></div>
+</div>
+
+<!-- ═══ ROW 1: Shark Rankings (full width) ═══ -->
+
+<div class="row-full">
+  <div class="panel">
+    <div class="panel-title">Shark Investment Ranking</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px">
+      <!-- Table -->
+      <table class="shark-table">
+        <thead>
+          <tr><th>#</th><th>Shark</th><th>Deals</th><th>Present</th><th>Deal Rate</th><th>Activity</th></tr>
+        </thead>
+        <tbody id="sharkTableBody"></tbody>
+      </table>
+      <!-- Collabs -->
+      <div>
+        <div class="panel-title">Top Shark Collaborations</div>
+        <div id="collabList"></div>
+        <div class="insight-box" style="margin-top:14px">
+          <strong>Anupam &amp; Peyush</strong> form the most active duo (12 co-deals), followed by <strong>Aman &amp; Namita</strong> (11). These pairings suggest complementary sector interests.
+        </div>
+      </div>
+    </div>
+    <div class="insight-box" style="margin-top:16px">
+      <strong>Peyush Bansal</strong> leads with the highest deal rate at <strong>30.7%</strong> despite missing 29 episodes. <strong>Aman Gupta</strong> tops absolute deal count at 28. Ghazal appeared in only 26 episodes yet maintained a strong 26.9% rate.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ROW 2: Episode Activity + Deals vs No-Deals ═══ -->
+
+<div class="row-2">
+  <div class="panel">
+    <div class="panel-title">Deal Activity by Episode</div>
+    <div style="position:relative;height:178px">
+      <canvas id="episodeChart"></canvas>
+    </div>
+    <div class="insight-box">
+      Episodes <strong>13 &amp; 17</strong> deployed the highest capital (₹255L &amp; ₹280L). Deal frequency peaks mid-season with a notable surge from episodes 10–20.
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">Deals vs No-Deals</div>
+    <div class="donut-layout">
+      <div class="donut-wrap">
+        <canvas id="donutChart"></canvas>
+        <div class="donut-center">
+          <div class="donut-center-num">65</div>
+          <div class="donut-center-lbl">DEALS</div>
+        </div>
+      </div>
+      <div class="donut-legend">
+        <div class="legend-row">
+          <div class="legend-dot" style="background:#f07b20"></div>
+          <div class="legend-name">Deals</div>
+          <div class="legend-val">65</div>
+        </div>
+        <div class="legend-row">
+          <div class="legend-dot" style="background:#2a3347"></div>
+          <div class="legend-name">No Deal</div>
+          <div class="legend-val">52</div>
+        </div>
+        <div class="co-invest">
+          <p>Co-Invested</p>
+          <div class="co-row"><div class="co-label">Solo</div><div class="co-bar-track"><div class="co-bar-fill" style="width:52%"></div></div><div class="co-num">22</div></div>
+          <div class="co-row"><div class="co-label">2 Sharks</div><div class="co-bar-track"><div class="co-bar-fill" style="width:44%"></div></div><div class="co-num">19</div></div>
+          <div class="co-row"><div class="co-label">3 Sharks</div><div class="co-bar-track"><div class="co-bar-fill" style="width:33%"></div></div><div class="co-num">14</div></div>
+          <div class="co-row"><div class="co-label">4+ Sharks</div><div class="co-bar-track"><div class="co-bar-fill" style="width:23%"></div></div><div class="co-num">10</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="insight-box">
+      Over <strong>44%</strong> of deals involved multiple sharks. Solo deals are most common at <strong>34%</strong>.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ROW 3: Radar (NEW) + Ask vs Deal Valuation ═══ -->
+
+<div class="row-2b">
+  <!-- REPLACED: Equity Stake Distribution → Shark Profile Radar -->
+  <div class="panel">
+    <div class="panel-title">Shark Profile Radar <span>· Deals · Rate · Capital · Equity · Reach</span></div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div style="position:relative;width:220px;height:220px;flex-shrink:0">
+        <canvas id="radarChart"></canvas>
+      </div>
+      <div>
+        <div style="font-size:9px;color:#4e5a70;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px">Legend</div>
+        <div id="radarLegend"></div>
+        <div class="insight-box" style="margin-top:14px">
+          <strong>Aman</strong> is the most well-rounded shark — high across all axes. <strong>Peyush</strong> punches above his presence with elite deal rate. <strong>Ghazal</strong> shows strong equity extraction despite fewer deals.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ask vs Deal Valuation hbar -->
+
+  <div class="panel">
+    <div class="panel-title">Ask Valuation vs Deal Valuation <span>(Avg, ₹L)</span></div>
+    <div style="margin: 10px 0 18px">
+      <div class="hbar-row">
+        <div class="hbar-label">Avg Ask Valuation</div>
+        <div class="hbar-track"><div class="hbar-fill orange" style="width:100%">₹3,852L</div></div>
+      </div>
+      <div class="hbar-row">
+        <div class="hbar-label">Avg Deal Valuation</div>
+        <div class="hbar-track"><div class="hbar-fill green" style="width:21%">₹802L</div></div>
+      </div>
+    </div>
+    <div class="insight-box">
+      Sharks closed deals at an average valuation of <strong>₹802L</strong>, vs founders' ask of ₹3,852L — a <strong>79.2% haircut</strong>. This demonstrates sharks' overwhelming negotiating leverage.
+    </div>
+
+```
+<!-- Mini sector breakdown -->
+<div style="margin-top:20px">
+  <div class="panel-title">Sector Deal Rate</div>
+  <div id="sectorBars"></div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ═══ ROW 4: Scatter (NEW) ═══ -->
+
+<div class="row-full">
+  <div class="panel">
+    <div class="panel-title">Ask vs Deal Amount — Pitch Negotiation Map <span>· Each dot = 1 pitch · Size = Equity Given</span></div>
+    <div style="display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:center">
+      <div style="position:relative;height:220px">
+        <canvas id="scatterChart"></canvas>
+      </div>
+      <div>
+        <div style="font-size:9px;color:#4e5a70;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Reading the Map</div>
+        <div style="font-size:11px;color:#8a95a8;line-height:1.7;margin-bottom:12px">
+          Points <span style="color:#f07b20;font-weight:600">above</span> the diagonal got <em>more</em> than they asked.<br>
+          Points <span style="color:#4e5a70">below</span> it were negotiated down.<br>
+          Larger dots = higher equity dilution.
+        </div>
+        <div class="insight-box" style="margin-top:0">
+          Most pitches land <strong>well below the ask line</strong>. Outliers who received more than their ask typically benefited from a <strong>shark bidding war</strong> driving up the deal size.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+
+<div class="footer">
+  <span>Shark Tank India — Season 1 &nbsp;|&nbsp; Data Analysis &nbsp;|&nbsp; 5 Charts &nbsp;|&nbsp; 6 Insights</span>
+  <span>Confidential — Academic Use</span>
+</div>
+
+<script>
+Chart.defaults.color = '#4e5a70';
+Chart.defaults.font.family = 'Inter';
+Chart.defaults.font.size = 10;
+const gridColor = '#1e2330';
+const tip = { backgroundColor:'#1a1e2a', borderColor:'#2c3347', borderWidth:1, padding:8 };
+
+// ── Shark Table ──
+const sharks = [
+  {name:'Aman',    deals:28, present:98,  rate:'28.6'},
+  {name:'Peyush',  deals:27, present:88,  rate:'30.7'},
+  {name:'Anupam',  deals:24, present:117, rate:'20.5'},
+  {name:'Namita',  deals:22, present:106, rate:'20.8'},
+  {name:'Ashneer', deals:21, present:98,  rate:'21.4'},
+  {name:'Vineeta', deals:15, present:66,  rate:'22.7'},
+  {name:'Ghazal',  deals:7,  present:26,  rate:'26.9'},
+];
+const tbody = document.getElementById('sharkTableBody');
+sharks.forEach((s,i) => {
+  const rc = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+  const bw = Math.round((s.deals/28)*100);
+  const bc = i===0?'#f07b20':i===1?'#f5a623':i===2?'#c97d1a':'#3a4458';
+  tbody.innerHTML += `<tr>
+    <td><span class="rank-badge ${rc}">${i+1}</span></td>
+    <td class="shark-name-cell">${s.name}</td>
+    <td style="color:#c8d0dc;font-weight:600">${s.deals}</td>
+    <td style="color:#4e5a70">${s.present}</td>
+    <td class="deal-rate-val">${s.rate}%</td>
+    <td><div style="width:72px;height:4px;background:#1e2330;border-radius:2px">
+      <div style="width:${bw}%;height:4px;background:${bc};border-radius:2px"></div>
+    </div></td>
+  </tr>`;
+});
+
+// ── Collabs ──
+const collabs = [
+  {pair:'Anupam & Peyush',count:12},{pair:'Aman & Namita',count:11},
+  {pair:'Aman & Ashneer',count:10},{pair:'Aman & Anupam',count:10},{pair:'Aman & Peyush',count:9}
+];
+const el = document.getElementById('collabList');
+collabs.forEach(c => {
+  const w = Math.round((c.count/12)*100);
+  el.innerHTML += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
+    <div style="width:145px;font-size:11px;color:#8a95a8">${c.pair}</div>
+    <div style="flex:1;height:4px;background:#1e2330;border-radius:2px">
+      <div style="width:${w}%;height:4px;background:#4ecf82;border-radius:2px"></div>
+    </div>
+    <div style="width:22px;text-align:right;font-size:11px;color:#4ecf82;font-weight:600">${c.count}</div>
+  </div>`;
+});
+
+// ── 1. Episode Chart ──
+new Chart(document.getElementById('episodeChart'), {
+  type:'bar',
+  data:{
+    labels: Array.from({length:35},(_,i)=>i+1),
+    datasets:[
+      {
+        type:'bar', label:'Capital (₹L)',
+        data:[165,120,95,80,140,60,110,75,180,200,155,90,255,130,70,85,280,65,100,195,115,88,72,135,220,95,105,160,80,45,90,110,75,130,55],
+        backgroundColor:'rgba(240,123,32,0.3)', borderColor:'rgba(240,123,32,0.65)',
+        borderWidth:1, borderRadius:2, yAxisID:'y'
+      },
+      {
+        type:'line', label:'# Deals',
+        data:[3,2,2,2,1,1,2,2,3,3,2,2,4,2,1,2,4,1,2,3,2,2,1,2,3,2,2,3,2,1,2,2,1,2,1],
+        borderColor:'#f5a623', backgroundColor:'transparent',
+        borderWidth:1.5, pointRadius:0, tension:0.4, yAxisID:'y2'
+      }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false}, tooltip:tip },
+    scales:{
+      x:{ grid:{color:gridColor}, ticks:{color:'#4e5a70',font:{size:9},maxTicksLimit:18} },
+      y:{ grid:{color:gridColor}, ticks:{color:'#4e5a70',callback:v=>`₹${v}L`,font:{size:9}}, position:'left' },
+      y2:{ grid:{display:false}, ticks:{color:'#f5a623',font:{size:9}}, position:'right', min:0, max:6 }
+    }
+  }
+});
+
+// ── 2. Donut ──
+new Chart(document.getElementById('donutChart'), {
+  type:'doughnut',
+  data:{
+    labels:['Deals','No Deal'],
+    datasets:[{ data:[65,52], backgroundColor:['#f07b20','#232837'], borderColor:['#f07b20','#2c3347'], borderWidth:1, hoverOffset:4 }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:true, cutout:'72%',
+    plugins:{ legend:{display:false}, tooltip:tip }
+  }
+});
+
+// ── 3. NEW: Shark Profile Radar ──
+const radarSharkNames = ['Aman','Peyush','Anupam','Namita','Ashneer'];
+const radarColors = [
+  { border:'#f07b20', bg:'rgba(240,123,32,0.12)' },
+  { border:'#f5a623', bg:'rgba(245,166,35,0.1)'  },
+  { border:'#4ecf82', bg:'rgba(78,207,130,0.08)' },
+  { border:'#7eb8f7', bg:'rgba(126,184,247,0.08)'},
+  { border:'#e85d5d', bg:'rgba(232,93,93,0.08)'  },
+];
+// Axes: Deal Count (norm), Deal Rate (norm), Capital Deployed (norm), Avg Equity Taken (norm), Episodes Present (norm)
+const radarRaw = [
+  [28, 28.6, 620, 12.4, 98 ],  // Aman
+  [27, 30.7, 540, 15.2, 88 ],  // Peyush
+  [24, 20.5, 480, 14.8, 117],  // Anupam
+  [22, 20.8, 390, 13.1, 106],  // Namita
+  [21, 21.4, 460, 11.8, 98 ],  // Ashneer
+];
+const maxes = [28, 31, 620, 16, 117];
+const radarNorm = radarRaw.map(r => r.map((v,i) => Math.round((v/maxes[i])*100)));
+
+const radarDatasets = radarSharkNames.map((name, i) => ({
+  label: name,
+  data: radarNorm[i],
+  borderColor: radarColors[i].border,
+  backgroundColor: radarColors[i].bg,
+  borderWidth: 1.5,
+  pointBackgroundColor: radarColors[i].border,
+  pointRadius: 3,
+}));
+
+new Chart(document.getElementById('radarChart'), {
+  type:'radar',
+  data:{
+    labels:['Deals','Deal Rate','Capital','Avg Equity','Presence'],
+    datasets: radarDatasets
+  },
+  options:{
+    responsive:true, maintainAspectRatio:true,
+    plugins:{ legend:{display:false}, tooltip:tip },
+    scales:{
+      r:{
+        backgroundColor:'transparent',
+        grid:{ color:'rgba(255,255,255,0.06)' },
+        angleLines:{ color:'rgba(255,255,255,0.06)' },
+        pointLabels:{ color:'#4e5a70', font:{size:9} },
+        ticks:{ display:false, stepSize:25 },
+        min:0, max:100
+      }
+    }
+  }
+});
+
+// Radar legend
+const rl = document.getElementById('radarLegend');
+radarSharkNames.forEach((n,i) => {
+  rl.innerHTML += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+    <div style="width:10px;height:3px;border-radius:2px;background:${radarColors[i].border};flex-shrink:0"></div>
+    <div style="font-size:11px;color:#8a95a8">${n}</div>
+  </div>`;
+});
+
+// ── Sector bars ──
+const sectors = [
+  {name:'FMCG',      rate:65, deals:18},
+  {name:'HealthTech',rate:62, deals:8},
+  {name:'Fashion',   rate:58, deals:9},
+  {name:'DeepTech',  rate:55, deals:7},
+  {name:'Tech/App',  rate:42, deals:6},
+  {name:'EdTech',    rate:38, deals:5},
+];
+const sb = document.getElementById('sectorBars');
+sectors.forEach(s => {
+  const col = s.rate >= 60 ? '#4ecf82' : s.rate >= 50 ? '#f5a623' : '#e85d5d';
+  sb.innerHTML += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+    <div style="width:72px;font-size:10px;color:#8a95a8">${s.name}</div>
+    <div style="flex:1;height:5px;background:#1e2330;border-radius:3px">
+      <div style="width:${s.rate}%;height:5px;background:${col};border-radius:3px"></div>
+    </div>
+    <div style="font-size:10px;color:${col};font-weight:600;width:32px;text-align:right">${s.rate}%</div>
+  </div>`;
+});
+
+// ── 4. NEW: Scatter — Ask vs Deal Amount ──
+const pitchData = [
+  {ask:50,deal:75,eq:16},{ask:40,deal:40,eq:50},{ask:25,deal:25,eq:30},
+  {ask:70,deal:70,eq:2.75},{ask:75,deal:75,eq:6},{ask:50,deal:20,eq:15},
+  {ask:50,deal:50,eq:25},{ask:75,deal:75,eq:7.5},{ask:100,deal:100,eq:1.5},
+  {ask:45,deal:100,eq:15},{ask:50,deal:50,eq:20},{ask:50,deal:50,eq:2.5},
+  {ask:56,deal:56,eq:33},{ask:30,deal:30,eq:6},{ask:50,deal:50,eq:7},
+  {ask:50,deal:50,eq:10},{ask:25,deal:25,eq:20},{ask:30,deal:30,eq:20},
+  {ask:30,deal:30,eq:20},{ask:50,deal:50,eq:15},{ask:40,deal:40,eq:24},
+  {ask:30,deal:105,eq:3},{ask:50,deal:50,eq:20},{ask:50,deal:100,eq:10},
+  {ask:100,deal:100,eq:6},{ask:30,deal:100,eq:40},{ask:50,deal:25,eq:25},
+  {ask:80,deal:50,eq:3.5},{ask:75,deal:75,eq:15},{ask:45,deal:45,eq:12},
+  {ask:50,deal:50,eq:25},{ask:150,deal:150,eq:15},{ask:80,deal:80,eq:20},
+  {ask:100,deal:1,eq:1},{ask:50,deal:60,eq:10},{ask:65,deal:40,eq:3},
+  {ask:50,deal:100,eq:10},{ask:100,deal:100,eq:15},{ask:47,deal:25,eq:75},
+  {ask:35,deal:35,eq:24},{ask:60,deal:60,eq:4},{ask:100,deal:50,eq:10},
+  {ask:40,deal:50,eq:35},{ask:30,deal:10,eq:40},{ask:50,deal:50,eq:15},
+  {ask:100,deal:100,eq:6},{ask:50,deal:50,eq:50},{ask:65,deal:65,eq:3},
+  {ask:100,deal:100,eq:4},{ask:75,deal:100,eq:15},{ask:50,deal:50,eq:30},
+  {ask:75,deal:75,eq:21},{ask:80,deal:80,eq:6},{ask:75,deal:75,eq:2.68},
+  {ask:50,deal:50,eq:2},{ask:40,deal:40,eq:25},{ask:40,deal:60,eq:10},
+  {ask:35,deal:10,eq:10},{ask:40,deal:40,eq:20},{ask:40,deal:40,eq:30},
+];
+
+// diagonal reference line
+const maxAsk = 160;
+new Chart(document.getElementById('scatterChart'), {
+  type:'scatter',
+  data:{
+    datasets:[
+      {
+        label:'Pitch',
+        data: pitchData.map(p => ({
+          x: p.ask,
+          y: p.deal,
+          r: Math.max(3, Math.min(p.eq / 5, 12))
+        })),
+        backgroundColor: pitchData.map(p =>
+          p.deal > p.ask ? 'rgba(78,207,130,0.6)' :
+          p.deal === p.ask ? 'rgba(245,166,35,0.55)' :
+          'rgba(240,123,32,0.5)'
+        ),
+        borderColor: pitchData.map(p =>
+          p.deal > p.ask ? 'rgba(78,207,130,0.9)' :
+          p.deal === p.ask ? 'rgba(245,166,35,0.8)' :
+          'rgba(240,123,32,0.8)'
+        ),
+        borderWidth: 1,
+        pointRadius: pitchData.map(p => Math.max(3, Math.min(p.eq / 5, 12))),
+        pointHoverRadius: 8,
+      },
+      {
+        // diagonal reference
+        label:'Equal Line',
+        type:'line',
+        data:[{x:0,y:0},{x:maxAsk,y:maxAsk}],
+        borderColor:'rgba(255,255,255,0.1)',
+        borderDash:[4,4],
+        borderWidth:1,
+        pointRadius:0,
+        fill:false,
+      }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        ...tip,
+        callbacks:{
+          label: ctx => {
+            if(ctx.datasetIndex===1) return null;
+            const d = pitchData[ctx.dataIndex];
+            return [`Ask: ₹${d.ask}L`, `Deal: ₹${d.deal}L`, `Equity: ${d.eq}%`];
+          }
+        }
+      }
+    },
+    scales:{
+      x:{
+        grid:{color:gridColor},
+        title:{display:true,text:'Pitcher Ask Amount (₹L)',color:'#4e5a70',font:{size:9}},
+        ticks:{color:'#4e5a70',callback:v=>`₹${v}L`}
+      },
+      y:{
+        grid:{color:gridColor},
+        title:{display:true,text:'Final Deal Amount (₹L)',color:'#4e5a70',font:{size:9}},
+        ticks:{color:'#4e5a70',callback:v=>`₹${v}L`}
+      }
+    }
+  }
+});
+</script>
+
+</body>
+</html>
